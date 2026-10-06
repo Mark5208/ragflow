@@ -61,9 +61,11 @@ sudo docker exec -it docker-ragflow-cpu-1 bash
 curl http://host.docker.internal:11434/
 ```
 
-Then add Ollama under **Model providers** with those exact model names and types (`llama3.2` / chat, `bge-m3` / embedding). Intel CPUs can use IPEX-LLM's Ollama build instead; that guide targets Linux and Windows. Source: same file, "Deploy a Local Model Using IPEX-LLM".
+Then add Ollama under **Model providers** with those exact model names and types (`llama3.2` / chat, `bge-m3` / embedding). That Ollama section does not document a rerank model. If loading the model times out, the FAQ says to check Ollama logs and free memory, then try a smaller model. Source: `docs/faq.mdx`, "Fail to access model(Ollama/xxxxx)".
 
-vLLM, SGLang, and GPUStack are listed as local runtimes, but they are the GPU path. Skip them on this PC.
+Leave the bundled embedding service off. `tei-cpu` and `tei-gpu` are commented out in `docker/.env`, and images from v0.22 on do not ship embedding models. The default TEI model, `Qwen/Qwen3-Embedding-0.6B`, needs 25 GB. `BAAI/bge-m3` on TEI needs 21 GB. Both are above this PC's 16 GB floor. `BAAI/bge-small-en-v1.5` is the TEI option the file lists at 1.2 GB, and only if you choose to turn TEI on. Source: `docker/.env`, "The embedding service image, model and port".
+
+IPEX-LLM's introduction says it can run on Intel CPUs or Intel GPUs, but the steps in that section set `OLLAMA_NUM_GPU=999` so layers stay on an Intel GPU. That is not the CPU procedure. vLLM, SGLang, and GPUStack are GPU paths. Skip them here. Source: `docs/guides/models/deploy_local_llm.mdx`.
 
 ## 3. Put the material the agent should know into a dataset
 
@@ -74,6 +76,8 @@ Source: `docs/quickstart.mdx`, "Create your first dataset" and "Set up an AI cha
 3. For plain text, Markdown, and text PDFs, choose the **Naive** parser. DeepDoc's OCR, table structure, and layout analysis are the GPU-heavy parsers, and Naive is the documented way to skip them. Source: `docs/guides/dataset/notes_and_faqs.md`, "Best Practices: Index Acceleration".
 4. Upload files, parse them, and run one retrieval test.
 5. Turn off RAPTOR, knowledge-graph extraction, auto-keyword, and auto-question on a small machine. Those call the LLM or do extra indexing. Same section.
+
+If a PDF parse stalls near the end with no error in the log, the FAQ says the process was likely killed for lack of RAM. `MEM_LIMIT` in `docker/.env` defaults to 8073741824 bytes for the container. Raising `DOC_BULK_SIZE` (default 4) or `EMBEDDING_BATCH_SIZE` (default 16) also raises memory use. Source: `docs/faq.mdx`.
 
 Quickstart's upload list is documents (PDF, DOC, DOCX, TXT, MD, MDX), tables, pictures, and slides. Put source you want retrieved into Markdown or text if the dataset will not take the original extension.
 
@@ -88,14 +92,16 @@ On that PC, open **Agent** → **Create agent**. Source: `docs/guides/agent/crea
 | Goal | What to create |
 | --- | --- |
 | Explain or answer from your docs and notes | Template **Knowledge Base Q&A**. Point it at the dataset. |
-| Generate and run Python for analysis | Template **Data Analysis**. It is written to call `CodeExec`. This needs the sandbox in the next section. |
+| Generate and run Python over a dataset | Template **Data Analysis** (`agent/templates/data_analysis_beginner_assistant.json`). Its prompt tells the model to use `CodeExec` for calculations. This needs the sandbox in the next section. It analyzes data. It does not edit a repository. |
 | A smaller custom helper | Blank agent. Keep `Begin`. Add an **Agent** component, select the chat model, and add **Retrieval** as a tool only if it must look up the dataset by itself. |
 
 The Agent component is the LLM node: it reasons, calls tools, and returns text. Add tools only when the prompt needs them. Tool calls, sub-agents, and extra reflection rounds make each reply slower, which matters more on a CPU model. Source: `docs/guides/agent/agent_workflow/basic_component.md`, "Agent Component" and "Tools and Sub-Agents".
 
 When the agent follows a retrieval node, the user prompt should cite the retrieved text, for example answering `/sys.query` from `/Retrieval_0.formalized_content` and saying when the dataset does not contain the answer. Same file, "Prompt Configuration".
 
-Save, then run a test on the canvas before relying on it.
+Save, then on the canvas click **Run**, enter a test question, and check each component's result. Source: `docs/guides/agent/understand_the_canvas.md`, "Save & Run".
+
+The canvas picker calls the code node **Code**. The sandbox admin guide and the Data Analysis template call the same capability **CodeExec**. The **GitHub** tool searches public repositories by popularity. It does not change a local checkout. The **Compiler** template is an ingestion step that builds knowledge artifacts, not a source-code compiler. Sources: `docs/guides/agent/agent_workflow/tool_components.md`; `docs/guides/knowledge_compilation/overview.md`.
 
 ## 5. Enable code execution only if the agent must run code
 
@@ -131,7 +137,8 @@ So the agent can run a snippet and return stdout or an artifact. It cannot clone
 
 ## What to skip
 
-- `DEVICE=gpu` and the `tei-gpu` Compose profile.
+- `DEVICE=gpu`, the `tei-gpu` profile, and `tei-cpu` with the default 25 GB embedding model.
+- IPEX-LLM's published steps, which pin the model to an Intel GPU.
 - DeepDoc for plain-text sources.
 - A local 7B-or-larger chat model on a 16 GB box that is already running Elasticsearch, MySQL, MinIO, and RAGFlow. The docs do not give a combined RAM budget; they only set 16 GB as the RAGFlow floor and recommend the 3B `llama3.2` as the local starting chat model.
 - Treating the agent as an IDE. Cursor on this Mac, and the RAGFlow agent on that PC, are separate tools and do not need a connection.
