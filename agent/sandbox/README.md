@@ -195,7 +195,7 @@ The `/run` endpoint can require a shared secret. Set the same value on both side
 SANDBOX_EXECUTOR_MANAGER_API_TOKEN=<openssl rand -hex 32>
 ```
 
-Requests must then carry `Authorization: Bearer <token>` (or `X-Sandbox-Token: <token>`); the RAGFlow self-managed provider sends this automatically. When the variable is unset the endpoint accepts unauthenticated requests (the pre-token behavior), and the executor manager logs a prominent security warning at startup and on first request. `/run` is additionally rate limited per client address (`SANDBOX_RUN_RATE_LIMIT`, default `120/minute`).
+Requests must then carry `Authorization: Bearer <token>` (or `X-Sandbox-Token: <token>`); the RAGFlow self-managed provider sends this automatically. When the variable is unset, `/run` refuses requests with HTTP 503. The previous open behavior remains only if `SANDBOX_EXECUTOR_MANAGER_ALLOW_UNAUTHENTICATED=true` is set explicitly, and the executor manager then logs a security warning. `/run` is additionally rate limited per client address (`SANDBOX_RUN_RATE_LIMIT`, default `120/minute`).
 
 ---
 

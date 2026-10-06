@@ -332,6 +332,16 @@ Defer:
 - Webhooks and the experimental subscription endpoint.
 - A Python `common/data_source` connector, unless the product decision is that python/hybrid must serve Miro too.
 
+## Host review, from issue 12313
+
+Source: [infiniflow/ragflow#12313](https://github.com/infiniflow/ragflow/issues/12313), checked 2026-10-06. The issue is an open checklist titled “More data sources coming soon.” Miro is still under Planned. The issue body does not list acceptance rules. The rules below are maintainer comments on PRs that cite this issue.
+
+- yingfeng, 2026-06-03, on Miro PR [#15552](https://github.com/infiniflow/ragflow/pull/15552): for every data connector, the author must provide evidence, including screenshots, that the connector works. Maintainer manpower is the stated reason.
+- That same PR was closed by mkaaad on 2026-09-02. The close comment says it looked like a placeholder with no real changes. The remaining commit was `chore: defer Miro connector implementation`.
+- On Obsidian PR [#18258](https://github.com/infiniflow/ragflow/pull/18258), mkaaad asked for CodeRabbit findings of major severity and above to be fixed, and for the Go implementation to be in the same change. JinHai-CN asked for conflicts to be resolved. Those comments are on that PR. They were not written as a rule for every connector. The PR was later closed with an offer to reopen.
+
+A Miro PR should be a real Go connector with tests, and the description should include screenshots of a working test connection and sync. A placeholder or docs-only diff matches the PR that was closed.
+
 ## 5. Open questions
 
 These are not answered by the fetched Miro docs or by the repo.

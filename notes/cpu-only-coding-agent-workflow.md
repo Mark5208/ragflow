@@ -112,7 +112,7 @@ The Code component runs Python or JavaScript for processing, conversion, calcula
 On that Linux PC:
 
 1. Install gVisor from https://gvisor.dev/docs/user_guide/install/.
-2. In `docker/.env`, set `SANDBOX_ENABLED=1` and append `sandbox` to `COMPOSE_PROFILES`.
+2. In `docker/.env`, set `SANDBOX_ENABLED=1` and append `sandbox` to `COMPOSE_PROFILES`. Set `SANDBOX_EXECUTOR_MANAGER_API_TOKEN` to a shared secret (`openssl rand -hex 32`). The same value is injected into RAGFlow and the executor. If it is left empty, `/run` answers HTTP 503. Source: `agent/sandbox/executor_manager/services/auth.py`; `docker/docker-compose-base.yml`.
 3. Add `127.0.0.1 es01 infinity mysql minio redis sandbox-executor-manager` to `/etc/hosts`.
 4. Pull or build the sandbox base images, then start Compose again. Pull path:
 

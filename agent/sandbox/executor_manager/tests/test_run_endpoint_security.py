@@ -230,6 +230,13 @@ class TestStandaloneComposeEnvironment:
         compose = self.COMPOSE_PATH.read_text(encoding="utf-8")
         assert "- SANDBOX_EXECUTOR_MANAGER_ALLOW_UNAUTHENTICATED=${SANDBOX_EXECUTOR_MANAGER_ALLOW_UNAUTHENTICATED:-false}" in compose
 
+    def test_ragflow_compose_fail_closed_token_is_forwarded(self):
+        compose_path = Path(__file__).resolve().parents[4] / "docker" / "docker-compose-base.yml"
+        compose = compose_path.read_text(encoding="utf-8")
+        assert "when empty the API stays open" not in compose
+        assert "- SANDBOX_EXECUTOR_MANAGER_API_TOKEN=${SANDBOX_EXECUTOR_MANAGER_API_TOKEN:-}" in compose
+        assert "- SANDBOX_EXECUTOR_MANAGER_ALLOW_UNAUTHENTICATED=${SANDBOX_EXECUTOR_MANAGER_ALLOW_UNAUTHENTICATED:-false}" in compose
+
     def test_env_example_matches_compose_defaults(self):
         example = self.ENV_EXAMPLE_PATH.read_text(encoding="utf-8")
         for name in (
